@@ -32,7 +32,7 @@ target_link_libraries(common PUBLIC glfw glm::glm)
 
 # Каждая неделя — своя папка со своим CMakeLists.txt.
 # Подключаем только те, что уже есть, чтобы проект собирался на любом этапе.
-foreach(week week1 week2 week3 week4 week5)
+foreach(week week1 week2 week3 week4 week5 week6)
     if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/${week}/CMakeLists.txt)
         add_subdirectory(${week})
     endif()
