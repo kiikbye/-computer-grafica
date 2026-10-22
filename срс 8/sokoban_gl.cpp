@@ -1,17 +1,5 @@
-// Sokoban - Nokia Edition (Modern OpenGL 3.3 Core: shaders + VAO + VBO)
-// SDL2 is used only for the window, OpenGL context and keyboard.
-// No glBegin/glEnd and no other fixed-function OpenGL is used.
-//
-// Windows (MinGW):
-//   g++ -std=c++11 sokoban_gl.cpp -o sokoban_gl.exe ^
-//     -IC:\SDL2\SDL2-2.32.10\x86_64-w64-mingw32\include ^
-//     -LC:\SDL2\SDL2-2.32.10\x86_64-w64-mingw32\lib ^
-//     -lmingw32 -lSDL2main -lSDL2 -lopengl32
-//   (SDL2.dll must be next to the .exe)
-// Linux:   g++ -std=c++11 sokoban_gl.cpp -o sokoban_gl `sdl2-config --cflags --libs` -lGL
-// macOS:   g++ -std=c++11 sokoban_gl.cpp -o sokoban_gl `sdl2-config --cflags --libs` -framework OpenGL
-//
-// Controls: Arrows / WASD = move, U = undo, R = restart, N = next level, ESC = quit
+// Басқару: Бағыттауыш пернелер немесе WASD — жүру, U — жүрісті қайтару, R — деңгейді қайта бастау, N — келесі деңгей, ESC — шығу
+
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_opengl.h>
@@ -22,11 +10,9 @@
 
 using namespace std;
 
-const int T = 32;  // tile size in pixels
+const int T = 32;   // Ұяшық өлшемі — пиксельмен
 
-// ---------------------------------------------------------------------
-// 1. Loading modern OpenGL functions (done by hand, no GLAD/GLEW needed)
-// ---------------------------------------------------------------------
+
 #define GLFN(type, name) static type p##name = nullptr;
 GLFN(PFNGLCREATESHADERPROC,            glCreateShader)
 GLFN(PFNGLSHADERSOURCEPROC,            glShaderSource)
@@ -82,10 +68,9 @@ static bool loadGL() {
     return true;
 }
 
-// ---------------------------------------------------------------------
-// 2. Shaders (GLSL 3.30 core)
-// ---------------------------------------------------------------------
-// Vertex shader: converts pixel coordinates (0..uRes, y down) to clip space.
+
+// Shaders (GLSL 3.30 core)
+
 static const char* VERT_SRC = R"(
 #version 330 core
 layout(location = 0) in vec2 aPos;     // position in pixels
@@ -100,7 +85,8 @@ void main() {
 }
 )";
 
-// Fragment shader: just outputs the interpolated color.
+// Fragment Shader: объектінің түсін шығарады.
+
 static const char* FRAG_SRC = R"(
 #version 330 core
 in vec3 vColor;
@@ -147,10 +133,10 @@ static GLuint createProgram() {
 // 3. Game data
 // ---------------------------------------------------------------------
 struct Col { float r, g, b; };
-const Col LIGHT = {199 / 255.f, 240 / 255.f, 216 / 255.f};   // Nokia LCD
+const Col LIGHT = {199 / 255.f, 240 / 255.f, 216 / 255.f};    // Nokia экранының түстері
 const Col DARK  = { 67 / 255.f,  82 / 255.f,  61 / 255.f};
 
-// Legend: # wall, @ player, $ box, . goal, * box on goal, + player on goal
+// Белгілер: # — қабырға, @ — ойыншы, $ — қорап, . — мақсат орны, * — мақсаттағы қорап, + — мақсат орнындағы ойыншы
 const vector<vector<string>> LEVELS = {
     {
         "######",
@@ -201,19 +187,17 @@ static vector<string> goals;
 static int level = 0;
 static bool won = false;
 static bool allDone = false;
-static int logicalW = 0, logicalH = 0;   // level size in pixels
+static int logicalW = 0, logicalH = 0;   
 
-// OpenGL objects
+
 static GLuint prog = 0, vao = 0, vbo = 0;
 static GLint  uResLoc = -1;
 
-// One vertex = position (x, y) + color (r, g, b)
-struct Vertex { float x, y, r, g, b; };
-static vector<Vertex> batch;             // vertices collected during one frame
 
-// ---------------------------------------------------------------------
-// 4. Drawing: every shape is made of rectangles = 2 triangles = 6 vertices
-// ---------------------------------------------------------------------
+struct Vertex { float x, y, r, g, b; };
+static vector<Vertex> batch;            
+
+
 static void rect(float x, float y, float w, float h, Col c) {
     Vertex a = {x,     y,     c.r, c.g, c.b};
     Vertex b = {x + w, y,     c.r, c.g, c.b};
@@ -244,7 +228,7 @@ static void drawBox(int x, int y, bool onGoal) {
         rect(x + 12, y + 12, 8, 8, LIGHT);
     } else {
         rect(x + 6, y + 6, T - 12, T - 12, LIGHT);
-        for (int i = 6; i < T - 6; i++) {          // diagonal cross
+        for (int i = 6; i < T - 6; i++) {          
             rect(x + i,         y + i, 2, 1, DARK);
             rect(x + T - 2 - i, y + i, 2, 1, DARK);
         }
@@ -263,7 +247,7 @@ static void drawPlayer(int x, int y) {
 }
 
 static void render() {
-    // --- build the vertex list for this frame ---
+   // осы кадрға арналған төбелер тізімін дайындау
     batch.clear();
     for (size_t y = 0; y < cur.grid.size(); y++) {
         for (size_t x = 0; x < cur.grid[y].size(); x++) {
@@ -279,19 +263,19 @@ static void render() {
     }
     drawPlayer(cur.px * T, cur.py * T);
 
-    // --- clear the whole window ---
+    // терезені тазалау
     int dw, dh;
     SDL_GL_GetDrawableSize(win, &dw, &dh);
     glViewport(0, 0, dw, dh);
     glClearColor(LIGHT.r, LIGHT.g, LIGHT.b, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
 
-    // --- keep the aspect ratio: centered viewport (letterbox) ---
+   // пропорцияны сақтау және көріністі ортаға орналастыру
     float scale = min((float)dw / logicalW, (float)dh / logicalH);
     int vw = (int)(logicalW * scale), vh = (int)(logicalH * scale);
     glViewport((dw - vw) / 2, (dh - vh) / 2, vw, vh);
 
-    // --- upload vertices to the VBO and draw ---
+   // төбелерді VBO-ға жіберіп, экранға салу
     pglUseProgram(prog);
     pglUniform2f(uResLoc, (float)logicalW, (float)logicalH);
     pglBindVertexArray(vao);
@@ -384,7 +368,7 @@ static void undo() {
 int main(int, char**) {
     if (SDL_Init(SDL_INIT_VIDEO) != 0) return 1;
 
-    // Ask for an OpenGL 3.3 Core context (no old fixed-function pipeline)
+  
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
@@ -403,14 +387,14 @@ int main(int, char**) {
     prog = createProgram();
     uResLoc = pglGetUniformLocation(prog, "uRes");
 
-    // VAO + VBO: describe the vertex layout once
+
     pglGenVertexArrays(1, &vao);
     pglGenBuffers(1, &vbo);
     pglBindVertexArray(vao);
     pglBindBuffer(GL_ARRAY_BUFFER, vbo);
-    pglVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)0);                    // aPos
+    pglVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)0);                    
     pglEnableVertexAttribArray(0);
-    pglVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(2 * sizeof(float)));  // aColor
+    pglVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(2 * sizeof(float)));  
     pglEnableVertexAttribArray(1);
 
     loadLevel(0);
@@ -443,7 +427,7 @@ int main(int, char**) {
         render();
     }
 
-    // Clean up OpenGL objects
+    
     pglDeleteBuffers(1, &vbo);
     pglDeleteVertexArrays(1, &vao);
     pglDeleteProgram(prog);
