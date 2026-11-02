@@ -1,4 +1,4 @@
-# Компьютерная графика — лабораторные 1–5
+# Компьютерная графика — лабораторные
 
 C++17 · OpenGL 3.3 Core · GLFW 3.4 · GLAD · GLM · CMake
 
@@ -18,6 +18,8 @@ computer_g/
 | [3](week3/README.md) | цвет вершин, интерполяция, ошибки шейдеров | `week3` |
 | [4](week4/README.md) | движение и delta time | `week4` |
 | [5](week5/README.md) | EBO, glDrawElements | `week5` |
+| [6](week6/README.md) | матрицы преобразования | `week6` |
+| [9](week9/README.md) | камера LookAt, WASD, delta time | `week9` |
 
 ## Сборка
 
