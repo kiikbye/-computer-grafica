@@ -19,7 +19,7 @@ computer_g/
 | [4](week4/README.md) | движение и delta time | `week4` |
 | [5](week5/README.md) | EBO, glDrawElements | `week5` |
 | [6](week6/README.md) | матрицы преобразования | `week6` |
-| [9](week9/README.md) | камера LookAt, WASD, delta time | `week9` |
+| [9](week9/README.md) | 7–8 апта негізіндегі MVP, depth/culling, LookAt камерасы | `week9` |
 
 ## Сборка
 
