@@ -20,6 +20,7 @@ computer_g/
 | [5](week5/README.md) | EBO, glDrawElements | `week5` |
 | [6](week6/README.md) | матрицы преобразования | `week6` |
 | [9](week9/README.md) | 7–8 апта негізіндегі MVP, depth/culling, LookAt камерасы | `week9` |
+| [10](week10/README.md) | Еркін камера, тінтуір, yaw/pitch және FOV | `week10` |
 
 ## Сборка
 
