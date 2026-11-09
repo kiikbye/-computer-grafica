@@ -49,7 +49,8 @@ void framebuffer_size_callback(GLFWwindow*, int width, int height) {
     glViewport(0, 0, width, height);
 }
 
-void mouse_callback(GLFWwindow*, double xpos, double ypos) {
+void mouse_callback(GLFWwindow* window, double xpos, double ypos) {
+    if (window && glfwGetInputMode(window, GLFW_CURSOR) != GLFW_CURSOR_DISABLED) return;
     if (firstMouse) {
         lastX = xpos;
         lastY = ypos;
@@ -96,6 +97,11 @@ void processInput(GLFWwindow* window, gl_app::Keyboard& keys, float dt) {
         std::cout << "Invert Y: " << (invertY ? "on" : "off") << '\n';
     }
     if (keys.pressed(GLFW_KEY_R)) resetCamera();
+    if (keys.pressed(GLFW_KEY_TAB)) {
+        const bool captured = glfwGetInputMode(window, GLFW_CURSOR) == GLFW_CURSOR_DISABLED;
+        glfwSetInputMode(window, GLFW_CURSOR, captured ? GLFW_CURSOR_NORMAL : GLFW_CURSOR_DISABLED);
+        firstMouse = true;
+    }
     if (keys.pressed(GLFW_KEY_P)) printCamera();
     for (std::size_t i = 0; i < sensitivities.size(); ++i) {
         if (keys.pressed(GLFW_KEY_1 + static_cast<int>(i))) {
@@ -293,9 +299,11 @@ int main(int argc, char** argv) {
         glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
         gl_app::Keyboard keys(window);
         std::cout << "Mouse: look | Wheel: zoom | I: invert Y | P: camera state\n"
-                  << "1/2/3: sensitivity | R: reset | WASD: move | Esc: exit\n"
+                  << "1/2/3: sensitivity | R: reset | Tab: cursor | WASD: move | Esc: exit\n"
                   << "Space/Left Shift: up/down | Left Ctrl: double speed\n";
         double previousTime = glfwGetTime();
+        double nextTitleUpdate = previousTime;
+        std::string displayedTitle;
         float angle = 0.0f;
         while (!glfwWindowShouldClose(window)) {
             glfwPollEvents();
@@ -307,10 +315,17 @@ int main(int argc, char** argv) {
                 continue;
             }
             processInput(window, keys, dt);
-            char title[128];
-            std::snprintf(title, sizeof(title), "Week 10 | yaw %.1f | pitch %.1f | FOV %.1f | sensitivity %.2f%s",
-                          yaw, pitch, fov, sensitivity, invertY ? " | Invert Y" : "");
-            glfwSetWindowTitle(window, title);
+            if (now >= nextTitleUpdate) {
+                char title[192];
+                std::snprintf(title, sizeof(title),
+                              "Week 10 | yaw %.1f | pitch %.1f | FOV %.1f | R: reset | Tab: cursor | Esc: exit",
+                              yaw, pitch, fov);
+                if (displayedTitle != title) {
+                    glfwSetWindowTitle(window, title);
+                    displayedTitle = title;
+                }
+                nextTitleUpdate = now + 0.1;
+            }
             angle += dt;
             render(program, vao, loc, angle);
             glfwSwapBuffers(window);
